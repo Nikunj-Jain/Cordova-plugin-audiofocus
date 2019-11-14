@@ -1,0 +1,15 @@
+{
+  "name": "cordova-plugin-audiofocus",
+  "version": "1.0.0",
+  "description": "Cordova Audio Focus Plugin",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Nikunj-Jain/Cordova-plugin-audiofocus.git"
+  },
+  "author": "Nikunj Jain <njnikjay@gmail.com>",
+  "license": "apache",
+  "bugs": {
+    "url": "https://github.com/Nikunj-Jain/Cordova-plugin-audiofocus/issues"
+  },
+  "homepage": "https://github.com/Nikunj-Jain/Cordova-plugin-audiofocus#readme"
+}
