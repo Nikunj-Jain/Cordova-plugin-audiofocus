@@ -5,6 +5,7 @@ import android.media.AudioAttributes;
 import android.media.AudioFocusRequest;
 import android.media.AudioManager;
 import android.os.Build;
+import android.util.Log;
 
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.CallbackContext;
@@ -13,6 +14,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 
 public class AudioFocus extends CordovaPlugin {
+
+    private final static String TAG = "AudioFocus.java";
 
     private AudioManager mAudioManager;
 
@@ -64,9 +67,14 @@ public class AudioFocus extends CordovaPlugin {
         }
 
         if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-            callbackContext.success("Successfully received audio focus.");
+            String str = "Successfully received audio focus.";
+            callbackContext.success(str);
+            Log.i(TAG, str);
         } else {
-            callbackContext.error("Getting audio focus failed.");
+            String str = "Getting audio focus failed.";
+            callbackContext.success(str);
+            Log.i(TAG, str);
+            callbackContext.error(str);
         }
     }
 
@@ -86,9 +94,13 @@ public class AudioFocus extends CordovaPlugin {
         }
 
         if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-            callbackContext.success("Abandoned audio focus successfully.");
+            String str = "Abandoned audio focus successfully.";
+            Log.i(TAG, str);
+            callbackContext.success(str);
         } else {
-            callbackContext.error("Abandoning audio focus failed.");
+            String str = "Abandoning audio focus failed.";
+            Log.i(TAG, str);
+            callbackContext.error(str);
         }
     }
 }
