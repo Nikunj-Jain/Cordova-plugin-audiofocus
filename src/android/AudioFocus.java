@@ -79,7 +79,10 @@ public class AudioFocus extends CordovaPlugin {
                     new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
                             .build());
         } else {
-            result = mAudioManager.abandonAudioFocus();
+            result = mAudioManager.abandonAudioFocus(new AudioManager.OnAudioFocusChangeListener() {
+                @Override
+                public void onAudioFocusChange(int i) { }
+            });
         }
 
         if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
