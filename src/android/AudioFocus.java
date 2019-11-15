@@ -77,10 +77,9 @@ public class AudioFocus extends CordovaPlugin {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             result = mAudioManager.abandonAudioFocusRequest(
                     new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
-                            .setOnAudioFocusChangeListener(focusChangeListener)
                             .build());
         } else {
-            result = mAudioManager.abandonAudioFocus(focusChangeListener);
+            result = mAudioManager.abandonAudioFocus();
         }
 
         if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
