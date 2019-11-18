@@ -12,9 +12,9 @@ exports.requestFocus = function(mode, success, error) {
 };
 
 
-exports.dumpFocus = function(mode, success, error) {
+exports.dumpFocus = function(success, error) {
     success = success || function() { };
     error = error || function() { };
 
-    exec(success, error, "AudioFocus", "dumpFocus", [mode]);
+    exec(success, error, "AudioFocus", "dumpFocus");
 };
