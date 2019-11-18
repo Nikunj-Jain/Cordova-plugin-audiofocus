@@ -61,16 +61,16 @@ public class AudioFocus extends CordovaPlugin {
 
         if (action.equals("requestFocus")) {
             if (this.requestFocus()) {
-                callbackContext.success();
+                callbackContext.success("");
             } else {
-                callbackContext.error();
+                callbackContext.error("");
             }
             return true;
         } else if (action.equals("dumpFocus")) {
             if (this.dumpFocus()) {
-                callbackContext.success();
+                callbackContext.success("");
             } else {
-                callbackContext.error();
+                callbackContext.error("");
             }
             return true;
         }
