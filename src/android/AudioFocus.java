@@ -39,7 +39,7 @@ public class AudioFocus extends CordovaPlugin {
                             .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
                             .build();
 
-                    mAudioFocusRequest = new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
+                    mAudioFocusRequest = new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
                             .setAudioAttributes(mAudioAttributes)
                             .setAcceptsDelayedFocusGain(true)
                             .setOnAudioFocusChangeListener(mFocusChangeListener)
