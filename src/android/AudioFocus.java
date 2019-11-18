@@ -11,7 +11,6 @@ import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.CallbackContext;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 
 public class AudioFocus extends CordovaPlugin {
 
@@ -46,7 +45,7 @@ public class AudioFocus extends CordovaPlugin {
     }
 
     @Override
-    public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
+    public boolean execute(String action, JSONArray args, CallbackContext callbackContext) {
 
         if (mAudioManager == null) {
             String errorMessage = "Audio manager out of memory";
@@ -119,7 +118,7 @@ public class AudioFocus extends CordovaPlugin {
         dumpFocus();
     }
 
-    public boolean setAudioMode(int audioMode) {
+    private void setAudioMode(int audioMode) {
 
         switch (audioMode) {
             case MODE_IN_COMMUNICATION:
@@ -147,7 +146,7 @@ public class AudioFocus extends CordovaPlugin {
 
 }
 
-private class onFocusChangeListener implements AudioManager.OnAudioFocusChangeListener {
+class onFocusChangeListener implements AudioManager.OnAudioFocusChangeListener {
     @Override
     public void onAudioFocusChange(int i) {
         // TODO: Implement this
