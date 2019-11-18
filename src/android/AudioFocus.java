@@ -85,9 +85,7 @@ public class AudioFocus extends CordovaPlugin {
             public void run() {
 
                 int result;
-
-                Log.i(TAG, "isMusicActive: " + mAudioManager.pla);
-
+                
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     result = mAudioManager.requestAudioFocus(mAudioFocusRequest);
                 } else {
