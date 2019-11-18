@@ -17,90 +17,139 @@ public class AudioFocus extends CordovaPlugin {
 
     private final static String TAG = "AudioFocus.java";
 
+    private static final int MODE_IN_COMMUNICATION = 100;
+    private static final int MODE_NORMAL = 101;
+    private static final int MODE_RINGTONE = 102;
+
     private AudioManager mAudioManager;
+    private onFocusChangeListener mFocusChangeListener;
+    private AudioFocusRequest mAudioFocusRequest;
 
     @Override
     protected void pluginInitialize() {
         mAudioManager = (AudioManager)this.cordova.getActivity().getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
+        mFocusChangeListener = new onFocusChangeListener();
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+
+            AudioAttributes mAudioAttributes = new AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_VOICE_COMMUNICATION)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                    .build();
+
+            mAudioFocusRequest = new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
+                    .setAudioAttributes(mAudioAttributes)
+                    .setAcceptsDelayedFocusGain(true)
+                    .setOnAudioFocusChangeListener(mFocusChangeListener)
+                    .build();
+        }
     }
 
     @Override
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
 
         if (mAudioManager == null) {
-            callbackContext.error("Audio manager out of memory");
+            String errorMessage = "Audio manager out of memory";
+            Log.e(TAG, errorMessage);
+            callbackContext.error(errorMessage);
+            return true;
         }
 
+        int audioMode = 0;
+        try { audioMode = args.getInt(0); }
+        catch (Exception e) {}
+        setAudioMode(audioMode);
+
         if (action.equals("requestFocus")) {
-            this.requestFocus(callbackContext);
+            this.requestFocus() ? callbackContext.success() : callbackContext.error();
             return true;
         } else if (action.equals("dumpFocus")) {
-            this.dumpFocus(callbackContext);
+            this.dumpFocus() ? callbackContext.success() : callbackContext.error();
             return true;
         }
 
         return false;
     }
 
-    private void requestFocus(CallbackContext callbackContext) {
+    private boolean requestFocus() {
 
         int result;
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            AudioAttributes playbackAttributes = new AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_VOICE_COMMUNICATION)
-                    .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
-                    .build();
-            AudioFocusRequest focusRequest =
-                    new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
-                            .setAudioAttributes(playbackAttributes)
-                            .setAcceptsDelayedFocusGain(true)
-                            .setOnAudioFocusChangeListener(
-                                    new AudioManager.OnAudioFocusChangeListener() {
-                                        @Override
-                                        public void onAudioFocusChange(int i) { }
-                                    })
-                            .build();
-            result = mAudioManager.requestAudioFocus(focusRequest);
+            result = mAudioManager.requestAudioFocus(mAudioFocusRequest);
         } else {
-            result = mAudioManager.requestAudioFocus(null, AudioManager.STREAM_VOICE_CALL, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
+            result = mAudioManager.requestAudioFocus(mFocusChangeListener, AudioManager.STREAM_VOICE_CALL, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
         }
 
         if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
             String str = "Successfully received audio focus.";
-            callbackContext.success(str);
             Log.i(TAG, str);
+            return true;
         } else {
             String str = "Getting audio focus failed.";
-            callbackContext.success(str);
             Log.i(TAG, str);
-            callbackContext.error(str);
+            return false;
         }
+
     }
 
-    private void dumpFocus(CallbackContext callbackContext) {
+    private boolean dumpFocus() {
 
         int result;
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            result = mAudioManager.abandonAudioFocusRequest(
-                    new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
-                            .build());
+            result = mAudioManager.abandonAudioFocusRequest(mAudioFocusRequest);
         } else {
-            result = mAudioManager.abandonAudioFocus(new AudioManager.OnAudioFocusChangeListener() {
-                @Override
-                public void onAudioFocusChange(int i) { }
-            });
+            result = mAudioManager.abandonAudioFocus(mFocusChangeListener);
         }
 
         if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
             String str = "Abandoned audio focus successfully.";
             Log.i(TAG, str);
-            callbackContext.success(str);
+            return true;
         } else {
             String str = "Abandoning audio focus failed.";
             Log.i(TAG, str);
-            callbackContext.error(str);
+            return false;
         }
+    }
+
+    @Override
+    public void onDestroy() {
+        dumpFocus();
+    }
+
+    public boolean setAudioMode(int audioMode) {
+
+        switch (audioMode) {
+            case MODE_IN_COMMUNICATION:
+                mAudioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
+                mAudioManager.setSpeakerphoneOn(false);
+                Log.i(TAG, "setAudioMode: MODE_IN_COMMUNICATION");
+                break;
+
+            case MODE_RINGTONE:
+                mAudioManager.setMode(AudioManager.MODE_RINGTONE);
+                mAudioManager.setSpeakerphoneOn(true);
+                Log.i(TAG, "setAudioMode: MODE_RINGTONE");
+                break;
+
+            case MODE_NORMAL:
+                mAudioManager.setMode(AudioManager.MODE_NORMAL);
+                mAudioManager.setSpeakerphoneOn(true);
+                Log.i(TAG, "setAudioMode: MODE_RINGTONE");
+                break;
+
+            default:
+                break;
+        }
+    }
+
+}
+
+private class onFocusChangeListener implements AudioManager.OnAudioFocusChangeListener {
+    @Override
+    public void onAudioFocusChange(int i) {
+        // TODO: Implement this
     }
 }
