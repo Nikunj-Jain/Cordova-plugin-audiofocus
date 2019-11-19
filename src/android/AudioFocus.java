@@ -26,6 +26,7 @@ public class AudioFocus extends CordovaPlugin {
     private onFocusChangeListener mFocusChangeListener;
     private AudioFocusRequest mAudioFocusRequest;
     private CallbackContext savedCallbackContext;
+    private int audioModeToSet = 0;
 
     @Override
     protected void pluginInitialize() {
@@ -58,14 +59,8 @@ public class AudioFocus extends CordovaPlugin {
             return true;
         }
 
-        cordova.getActivity().runOnUiThread(new Runnable() {
-            public void run() {
-                int audioMode = 0;
-                try { audioMode = args.getInt(0); }
-                catch (JSONException e) {}
-                setAudioMode(audioMode);
-            }
-        });
+        try { audioModeToSet = args.getInt(0); }
+        catch (JSONException e) {}
 
         if (action.equals("requestFocus")) {
             savedCallbackContext = callbackContext;
@@ -95,6 +90,7 @@ public class AudioFocus extends CordovaPlugin {
 
                 if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
                     String str = "Successfully received audio focus.";
+                    setAudioMode();
                     returnCallback(true, str);
                 } else {
                     String str = "Getting audio focus failed.";
@@ -134,9 +130,9 @@ public class AudioFocus extends CordovaPlugin {
         dumpFocus();
     }
 
-    private void setAudioMode(int audioMode) {
+    private void setAudioMode() {
 
-        switch (audioMode) {
+        switch (audioModeToSet) {
             case MODE_IN_COMMUNICATION:
                 mAudioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
                 mAudioManager.setSpeakerphoneOn(false);
@@ -158,6 +154,8 @@ public class AudioFocus extends CordovaPlugin {
             default:
                 break;
         }
+
+        audioModeToSet = 0;
     }
 
     private void sendUpdate(String message, boolean success) {
