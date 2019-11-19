@@ -1,12 +1,14 @@
 package com.thenikunj.cordova.plugins;
 
 import android.content.Context;
+import android.content.Intent;
 import android.media.AudioAttributes;
 import android.media.AudioFocusRequest;
 import android.media.AudioManager;
 import android.os.Build;
 import android.util.Log;
 
+import org.apache.cordova.CordovaActivity;
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.PluginResult;
@@ -90,6 +92,10 @@ public class AudioFocus extends CordovaPlugin {
 
                 if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
                     String str = "Successfully received audio focus.";
+                    Intent i = new Intent("com.android.music.musicservicecommand");
+
+                    i.putExtra("command", "pause");
+                    cordova.getActivity().getApplicationContext().sendBroadcast(i);
                     setAudioMode();
                     returnCallback(true, str);
                 } else {
