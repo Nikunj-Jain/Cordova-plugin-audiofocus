@@ -123,7 +123,7 @@ public class AudioFocus extends CordovaPlugin {
 
         cordova.getActivity().runOnUiThread(new Runnable() {
             public void run() {
-                
+
                 if (mMediaPlayer.isPlaying()) {
                     mMediaPlayer.stop();
                 }
@@ -158,6 +158,7 @@ public class AudioFocus extends CordovaPlugin {
             case MODE_IN_COMMUNICATION:
                 if (mMediaPlayer.isPlaying()) {
                     mMediaPlayer.stop();
+                    mMediaPlayer.reset();
                 }
                 mAudioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
                 Log.i(TAG, "setAudioMode: MODE_IN_COMMUNICATION");
@@ -165,6 +166,10 @@ public class AudioFocus extends CordovaPlugin {
 
             case MODE_RINGTONE:
                 mAudioManager.setMode(AudioManager.MODE_RINGTONE);
+                if (mMediaPlayer.isPlaying()) {
+                    mMediaPlayer.stop();
+                    mMediaPlayer.reset();
+                }
                 try {mMediaPlayer.prepare();} catch (Exception e) {Log.e(TAG, e.getMessage());}
                 mMediaPlayer.start();
                 Log.i(TAG, "setAudioMode: MODE_RINGTONE");
@@ -173,6 +178,7 @@ public class AudioFocus extends CordovaPlugin {
             case MODE_NORMAL:
                 if (mMediaPlayer.isPlaying()) {
                     mMediaPlayer.stop();
+                    mMediaPlayer.reset();
                 }
                 mAudioManager.setMode(AudioManager.MODE_NORMAL);
                 Log.i(TAG, "setAudioMode: MODE_NORMAL");
