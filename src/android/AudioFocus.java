@@ -29,26 +29,22 @@ public class AudioFocus extends CordovaPlugin {
 
     @Override
     protected void pluginInitialize() {
-        cordova.getActivity().runOnUiThread(new Runnable() {
-            public void run() {
-                mAudioManager = (AudioManager)cordova.getActivity().getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
-                mFocusChangeListener = new onFocusChangeListener();
+        mAudioManager = (AudioManager)cordova.getActivity().getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
+        mFocusChangeListener = new onFocusChangeListener();
 
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 
-                    AudioAttributes mAudioAttributes = new AudioAttributes.Builder()
-                            .setUsage(AudioAttributes.USAGE_VOICE_COMMUNICATION)
-                            .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
-                            .build();
+            AudioAttributes mAudioAttributes = new AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_VOICE_COMMUNICATION)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                    .build();
 
-                    mAudioFocusRequest = new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE)
-                            .setAudioAttributes(mAudioAttributes)
-                            .setAcceptsDelayedFocusGain(true)
-                            .setOnAudioFocusChangeListener(mFocusChangeListener)
-                            .build();
-                }
-            }
-        });
+            mAudioFocusRequest = new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE)
+                    .setAudioAttributes(mAudioAttributes)
+                    .setAcceptsDelayedFocusGain(true)
+                    .setOnAudioFocusChangeListener(mFocusChangeListener)
+                    .build();
+        }
     }
 
     @Override
@@ -189,6 +185,7 @@ public class AudioFocus extends CordovaPlugin {
             Log.e(TAG, message);
             savedCallbackContext.error(message);
         }
+        savedCallbackContext = null;
     }
 
 }
