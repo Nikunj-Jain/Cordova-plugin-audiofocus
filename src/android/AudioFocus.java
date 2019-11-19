@@ -9,6 +9,7 @@ import android.util.Log;
 
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.CallbackContext;
+import org.apache.cordova.PluginResult;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -24,6 +25,7 @@ public class AudioFocus extends CordovaPlugin {
     private AudioManager mAudioManager;
     private onFocusChangeListener mFocusChangeListener;
     private AudioFocusRequest mAudioFocusRequest;
+    private CallbackContext savedCallbackContext;
 
     @Override
     protected void pluginInitialize() {
@@ -55,6 +57,7 @@ public class AudioFocus extends CordovaPlugin {
         if (mAudioManager == null) {
             String errorMessage = "Audio manager out of memory";
             Log.e(TAG, errorMessage);
+            callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.ERROR, errorMessage));
             callbackContext.error(errorMessage);
             return true;
         }
@@ -69,48 +72,44 @@ public class AudioFocus extends CordovaPlugin {
         });
 
         if (action.equals("requestFocus")) {
-            requestFocus(callbackContext);
+            savedCallbackContext = callbackContext;
+            requestFocus();
             return true;
         } else if (action.equals("dumpFocus")) {
-            dumpFocus(callbackContext);
+            savedCallbackContext = callbackContext;
+            dumpFocus();
             return true;
         }
 
         return false;
     }
 
-    private void requestFocus(final CallbackContext callbackContext) {
+    private void requestFocus() {
 
         cordova.getActivity().runOnUiThread(new Runnable() {
             public void run() {
 
                 int result;
-                
+
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     result = mAudioManager.requestAudioFocus(mAudioFocusRequest);
                 } else {
                     result = mAudioManager.requestAudioFocus(mFocusChangeListener, AudioManager.STREAM_VOICE_CALL, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE);
                 }
 
-                if (callbackContext == null) {
-                    return;
-                }
-
                 if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
                     String str = "Successfully received audio focus.";
-                    Log.i(TAG, str);
-                    callbackContext.success(str);
+                    returnCallback(true, str);
                 } else {
                     String str = "Getting audio focus failed.";
-                    Log.e(TAG, str);
-                    callbackContext.error(str);
+                    returnCallback(false, str);
                 }
             }
         });
 
     }
 
-    private void dumpFocus(final CallbackContext callbackContext) {
+    private void dumpFocus() {
 
         cordova.getActivity().runOnUiThread(new Runnable() {
             public void run() {
@@ -123,18 +122,12 @@ public class AudioFocus extends CordovaPlugin {
                     result = mAudioManager.abandonAudioFocus(mFocusChangeListener);
                 }
 
-                if (callbackContext == null) {
-                    return;
-                }
-
                 if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
                     String str = "Abandoned audio focus successfully.";
-                    Log.i(TAG, str);
-                    callbackContext.success(str);
+                    returnCallback(true, str);
                 } else {
                     String str = "Abandoning audio focus failed.";
-                    Log.e(TAG, str);
-                    callbackContext.error(str);
+                    returnCallback(false, str);
                 }
             }
         });
@@ -142,7 +135,7 @@ public class AudioFocus extends CordovaPlugin {
 
     @Override
     public void onDestroy() {
-        dumpFocus(null);
+        dumpFocus();
     }
 
     private void setAudioMode(int audioMode) {
@@ -163,11 +156,38 @@ public class AudioFocus extends CordovaPlugin {
             case MODE_NORMAL:
                 mAudioManager.setMode(AudioManager.MODE_NORMAL);
                 mAudioManager.setSpeakerphoneOn(true);
-                Log.i(TAG, "setAudioMode: MODE_RINGTONE");
+                Log.i(TAG, "setAudioMode: MODE_NORMAL");
                 break;
 
             default:
                 break;
+        }
+    }
+
+    private void sendUpdate(String message, boolean success) {
+        if (savedCallbackContext != null) {
+            PluginResult result = new PluginResult(success ? PluginResult.Status.OK : PluginResult.Status.ERROR, message);
+            result.setKeepCallback(true);
+            savedCallbackContext.sendPluginResult(result);
+        }
+    }
+
+    private void returnCallback(boolean success, String message) {
+
+        if (savedCallbackContext == null) {
+            return;
+        }
+
+        if (message == null) {
+            message = "";
+        }
+
+        if (success) {
+            Log.i(TAG, message);
+            savedCallbackContext.success(message);
+        } else {
+            Log.e(TAG, message);
+            savedCallbackContext.error(message);
         }
     }
 
