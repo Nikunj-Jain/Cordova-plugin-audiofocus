@@ -5,10 +5,12 @@ import android.content.Intent;
 import android.media.AudioAttributes;
 import android.media.AudioFocusRequest;
 import android.media.AudioManager;
+import android.media.MediaPlayer;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.Build;
 import android.util.Log;
 
-import org.apache.cordova.CordovaActivity;
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.PluginResult;
@@ -28,6 +30,7 @@ public class AudioFocus extends CordovaPlugin {
     private onFocusChangeListener mFocusChangeListener;
     private AudioFocusRequest mAudioFocusRequest;
     private CallbackContext savedCallbackContext;
+    private MediaPlayer mMediaPlayer;
     private int audioModeToSet = 0;
 
     @Override
@@ -47,6 +50,15 @@ public class AudioFocus extends CordovaPlugin {
                     .setAcceptsDelayedFocusGain(true)
                     .setOnAudioFocusChangeListener(mFocusChangeListener)
                     .build();
+        }
+
+        Uri alert = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
+        mMediaPlayer = new MediaPlayer();
+        try {mMediaPlayer.setDataSource(cordova.getContext(), alert);} catch (Exception e) {Log.e(TAG, e.getMessage());}
+
+        if (mAudioManager.getStreamVolume(AudioManager.STREAM_RING) != 0) {
+            mMediaPlayer.setAudioStreamType(AudioManager.STREAM_RING);
+            mMediaPlayer.setLooping(true);
         }
     }
 
@@ -140,16 +152,24 @@ public class AudioFocus extends CordovaPlugin {
 
         switch (audioModeToSet) {
             case MODE_IN_COMMUNICATION:
+                if (mMediaPlayer.isPlaying()) {
+                    mMediaPlayer.stop();
+                }
                 mAudioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
                 Log.i(TAG, "setAudioMode: MODE_IN_COMMUNICATION");
                 break;
 
             case MODE_RINGTONE:
                 mAudioManager.setMode(AudioManager.MODE_RINGTONE);
+                try {mMediaPlayer.prepare();} catch (Exception e) {Log.e(TAG, e.getMessage());}
+                mMediaPlayer.start();
                 Log.i(TAG, "setAudioMode: MODE_RINGTONE");
                 break;
 
             case MODE_NORMAL:
+                if (mMediaPlayer.isPlaying()) {
+                    mMediaPlayer.stop();
+                }
                 mAudioManager.setMode(AudioManager.MODE_NORMAL);
                 Log.i(TAG, "setAudioMode: MODE_NORMAL");
                 break;
