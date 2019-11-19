@@ -40,7 +40,7 @@ public class AudioFocus extends CordovaPlugin {
                     .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
                     .build();
 
-            mAudioFocusRequest = new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE)
+            mAudioFocusRequest = new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
                     .setAudioAttributes(mAudioAttributes)
                     .setAcceptsDelayedFocusGain(true)
                     .setOnAudioFocusChangeListener(mFocusChangeListener)
@@ -85,7 +85,7 @@ public class AudioFocus extends CordovaPlugin {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     result = mAudioManager.requestAudioFocus(mAudioFocusRequest);
                 } else {
-                    result = mAudioManager.requestAudioFocus(mFocusChangeListener, AudioManager.STREAM_VOICE_CALL, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE);
+                    result = mAudioManager.requestAudioFocus(mFocusChangeListener, AudioManager.STREAM_VOICE_CALL, AudioManager.AUDIOFOCUS_GAIN);
                 }
 
                 if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
