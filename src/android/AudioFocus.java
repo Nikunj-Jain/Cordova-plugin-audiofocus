@@ -141,19 +141,16 @@ public class AudioFocus extends CordovaPlugin {
         switch (audioModeToSet) {
             case MODE_IN_COMMUNICATION:
                 mAudioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
-                mAudioManager.setSpeakerphoneOn(false);
                 Log.i(TAG, "setAudioMode: MODE_IN_COMMUNICATION");
                 break;
 
             case MODE_RINGTONE:
                 mAudioManager.setMode(AudioManager.MODE_RINGTONE);
-                mAudioManager.setSpeakerphoneOn(false);
                 Log.i(TAG, "setAudioMode: MODE_RINGTONE");
                 break;
 
             case MODE_NORMAL:
                 mAudioManager.setMode(AudioManager.MODE_NORMAL);
-                mAudioManager.setSpeakerphoneOn(false);
                 Log.i(TAG, "setAudioMode: MODE_NORMAL");
                 break;
 
