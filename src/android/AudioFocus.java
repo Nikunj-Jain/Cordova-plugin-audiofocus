@@ -123,6 +123,10 @@ public class AudioFocus extends CordovaPlugin {
 
         cordova.getActivity().runOnUiThread(new Runnable() {
             public void run() {
+                
+                if (mMediaPlayer.isPlaying()) {
+                    mMediaPlayer.stop();
+                }
 
                 int result;
 
