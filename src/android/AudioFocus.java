@@ -203,10 +203,10 @@ public class AudioFocus extends CordovaPlugin {
         if (isAppInForeground) {
             return;
         }
-//        Intent intent = new Intent(cordova.getContext(), cordova.getActivity().getClass());
-//        intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-//        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-//        cordova.getContext().startActivity(intent);
+        Intent intent = new Intent(cordova.getContext(), cordova.getActivity().getClass());
+        intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        cordova.getContext().startActivity(intent);
     }
 
     private void setAudioMode() {
@@ -300,17 +300,11 @@ public class AudioFocus extends CordovaPlugin {
             from = "Incoming call";
         }
 
-        Intent fullScreenIntent = new Intent(cordova.getContext(), cordova.getActivity().getClass());
-        PendingIntent fullScreenPendingIntent = PendingIntent.getActivity(cordova.getContext(), 0, fullScreenIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-
-
         NotificationCompat.Builder builder = new NotificationCompat.Builder(cordova.getContext(), NOTIFICATION_CHANNEL_ID)
                 .setSmallIcon(androidx.appcompat.R.drawable.notification_icon_background)
                 .setContentTitle(from)
                 .setContentText("Incoming voice call")
-                .setCategory(NotificationCompat.CATEGORY_CALL)
-                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                .setFullScreenIntent(fullScreenPendingIntent, true);
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT);
 
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(cordova.getContext());
         notificationManager.notify(INCOMING_CALL_NOTIFICATION_ID, builder.build());
