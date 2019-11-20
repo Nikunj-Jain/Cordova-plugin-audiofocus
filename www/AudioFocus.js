@@ -26,5 +26,5 @@ exports.showCallNotification = function(fromStr, success, error) {
 };
 
 exports.dismissCallNotification = function() {
-    exec(success, error, "AudioFocus", "dismissCallNotification");
+    exec(null, null, "AudioFocus", "dismissCallNotification");
 };
