@@ -296,6 +296,7 @@ public class AudioFocus extends CordovaPlugin {
         }
 
         if (from == null || from.equals("") || from.equals("null") || !from.equals("nil")) {
+            Log.i(TAG, "showNotification: From " + from);
             from = "Incoming call";
         }
 
