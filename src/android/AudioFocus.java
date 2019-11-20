@@ -165,6 +165,15 @@ public class AudioFocus extends CordovaPlugin {
 
     }
 
+    private void bringAppToFront() {
+        Intent intent = new Intent(cordova.getContext(), this.getClass());
+        intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+        intent.addFlags(Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
+        intent.addFlags(Intent.FLAG_ACTIVITY_PREVIOUS_IS_TOP);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        cordova.getContext().startActivity(intent);
+    }
+
     private void setAudioMode() {
 
         switch (audioModeToSet) {
@@ -195,6 +204,8 @@ public class AudioFocus extends CordovaPlugin {
                         break;
                     }
                 }
+
+                bringAppToFront();
 
                 Log.i(TAG, "setAudioMode: MODE_RINGTONE successful");
                 break;
