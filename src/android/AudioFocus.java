@@ -11,10 +11,9 @@ import android.net.Uri;
 import android.os.Build;
 import android.util.Log;
 
-import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.CallbackContext;
+import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.PluginResult;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 
@@ -50,15 +49,6 @@ public class AudioFocus extends CordovaPlugin {
                     .setAcceptsDelayedFocusGain(true)
                     .setOnAudioFocusChangeListener(mFocusChangeListener)
                     .build();
-        }
-
-        Uri alert = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
-        mMediaPlayer = new MediaPlayer();
-        try {mMediaPlayer.setDataSource(cordova.getContext(), alert);} catch (Exception e) {Log.e(TAG, e.getMessage());}
-
-        if (mAudioManager.getStreamVolume(AudioManager.STREAM_RING) != 0) {
-            mMediaPlayer.setAudioStreamType(AudioManager.STREAM_RING);
-            mMediaPlayer.setLooping(true);
         }
     }
 
@@ -124,9 +114,7 @@ public class AudioFocus extends CordovaPlugin {
         cordova.getActivity().runOnUiThread(new Runnable() {
             public void run() {
 
-                if (mMediaPlayer.isPlaying()) {
-                    mMediaPlayer.stop();
-                }
+                releaseMediaPlayer();
 
                 int result;
 
@@ -150,38 +138,71 @@ public class AudioFocus extends CordovaPlugin {
     @Override
     public void onDestroy() {
         dumpFocus();
+        releaseMediaPlayer();
+    }
+
+    private void setUpMediaPlayer() {
+
+        if (mMediaPlayer == null) {
+            Uri alert = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
+            mMediaPlayer = new MediaPlayer();
+            try {mMediaPlayer.setDataSource(cordova.getContext(), alert);} catch (Exception e) {Log.e(TAG, e.getMessage());}
+
+            if (mAudioManager.getStreamVolume(AudioManager.STREAM_RING) != 0) {
+                mMediaPlayer.setAudioStreamType(AudioManager.STREAM_RING);
+                mMediaPlayer.setLooping(true);
+            }
+        }
+
+    }
+
+    private void releaseMediaPlayer() {
+
+        if (mMediaPlayer != null) {
+            mMediaPlayer.release();
+            mMediaPlayer = null;
+        }
+
     }
 
     private void setAudioMode() {
 
         switch (audioModeToSet) {
             case MODE_IN_COMMUNICATION:
-                if (mMediaPlayer.isPlaying()) {
-                    mMediaPlayer.stop();
-                    mMediaPlayer.reset();
-                }
+                releaseMediaPlayer();
                 mAudioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
-                Log.i(TAG, "setAudioMode: MODE_IN_COMMUNICATION");
+                Log.i(TAG, "setAudioMode: MODE_IN_COMMUNICATION successful");
                 break;
 
             case MODE_RINGTONE:
                 mAudioManager.setMode(AudioManager.MODE_RINGTONE);
-                if (mMediaPlayer.isPlaying()) {
-                    mMediaPlayer.stop();
-                    mMediaPlayer.reset();
+
+                if (mMediaPlayer != null) {
+                    if (mMediaPlayer.isPlaying()) {
+                        mMediaPlayer.stop();
+                        mMediaPlayer.start();
+                    }
+                } else {
+                    setUpMediaPlayer();
                 }
-                try {mMediaPlayer.prepare();} catch (Exception e) {Log.e(TAG, e.getMessage());}
-                mMediaPlayer.start();
-                Log.i(TAG, "setAudioMode: MODE_RINGTONE");
+
+                if (!mMediaPlayer.isPlaying()) {
+                    try {
+                        mMediaPlayer.prepare();
+                        mMediaPlayer.start();
+                    } catch (Exception e) {
+                        Log.e(TAG, e.getMessage());
+                        break;
+                    }
+                }
+
+                Log.i(TAG, "setAudioMode: MODE_RINGTONE successful");
                 break;
 
             case MODE_NORMAL:
-                if (mMediaPlayer.isPlaying()) {
-                    mMediaPlayer.stop();
-                    mMediaPlayer.reset();
-                }
+                releaseMediaPlayer();
                 mAudioManager.setMode(AudioManager.MODE_NORMAL);
-                Log.i(TAG, "setAudioMode: MODE_NORMAL");
+                Log.i(TAG, "setAudioMode: MODE_NORMAL successful");
                 break;
 
             default:
