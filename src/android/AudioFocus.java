@@ -64,8 +64,8 @@ public class AudioFocus extends CordovaPlugin {
 
             CharSequence name = "Incoming calls";
             String description = "Show incoming calls notification";
-            int importance = NotificationManager.IMPORTANCE_MAX;
-            NotificationChannel channel = new NotificationChannel(NOTIFICATION_CHANNEL_ID, name, importance);
+            NotificationChannel channel = new NotificationChannel(NOTIFICATION_CHANNEL_ID, name, NotificationManager.IMPORTANCE_DEFAULT);
+            channel.setSound(null, null);
             channel.setDescription(description);
             NotificationManager notificationManager = (NotificationManager)cordova.getActivity().getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
             notificationManager.createNotificationChannel(channel);
