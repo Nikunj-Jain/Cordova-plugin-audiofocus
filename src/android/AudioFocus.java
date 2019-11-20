@@ -166,7 +166,7 @@ public class AudioFocus extends CordovaPlugin {
     }
 
     private void bringAppToFront() {
-        Intent intent = new Intent(cordova.getContext(), this.getClass());
+        Intent intent = new Intent(cordova.getContext(), cordova.getActivity().getClass());
         intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
         intent.addFlags(Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
         intent.addFlags(Intent.FLAG_ACTIVITY_PREVIOUS_IS_TOP);
