@@ -296,7 +296,7 @@ public class AudioFocus extends CordovaPlugin {
             Log.i(TAG, "showNotification: no from name provided. Using default.");
         }
 
-        if (from == null || from.equals("") || from.equals("null") || !from.equals("nil")) {
+        if (from == null || from.equals("") || from.equals("null") || from.equals("nil")) {
             Log.i(TAG, "showNotification: From " + from);
             from = "Incoming call";
         }
@@ -305,7 +305,7 @@ public class AudioFocus extends CordovaPlugin {
                 .setSmallIcon(androidx.appcompat.R.drawable.notification_icon_background)
                 .setContentTitle(from)
                 .setContentText("Incoming voice call")
-                .setPriority(NotificationCompat.PRIORITY_MAX)
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .setCategory(NotificationCompat.CATEGORY_CALL);
 
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(cordova.getContext());
