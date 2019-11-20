@@ -1,5 +1,7 @@
 package com.thenikunj.cordova.plugins;
 
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 import android.media.AudioAttributes;
@@ -10,6 +12,11 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
 import android.util.Log;
+
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
+
+import com.thenikunj.cordova.plugins.audiofocus.R;
 
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
@@ -24,16 +31,22 @@ public class AudioFocus extends CordovaPlugin {
     private static final int MODE_IN_COMMUNICATION = 100;
     private static final int MODE_NORMAL = 101;
     private static final int MODE_RINGTONE = 102;
+    private static final String NOTIFICATION_CHANNEL_ID = TAG + ":NotificationChannel";
+    private static final int INCOMING_CALL_NOTIFICATION_ID = 1001;
 
     private AudioManager mAudioManager;
+
     private onFocusChangeListener mFocusChangeListener;
     private AudioFocusRequest mAudioFocusRequest;
     private CallbackContext savedCallbackContext;
     private MediaPlayer mMediaPlayer;
     private int audioModeToSet = 0;
 
+    private boolean isAppInForeground = false;
+
     @Override
     protected void pluginInitialize() {
+
         mAudioManager = (AudioManager)cordova.getActivity().getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
         mFocusChangeListener = new onFocusChangeListener();
 
@@ -49,6 +62,15 @@ public class AudioFocus extends CordovaPlugin {
                     .setAcceptsDelayedFocusGain(true)
                     .setOnAudioFocusChangeListener(mFocusChangeListener)
                     .build();
+
+
+            CharSequence name = "Incoming calls";
+            String description = "Show incoming calls notification";
+            int importance = NotificationManager.IMPORTANCE_MAX;
+            NotificationChannel channel = new NotificationChannel(NOTIFICATION_CHANNEL_ID, name, importance);
+            channel.setDescription(description);
+            NotificationManager notificationManager = (NotificationManager)cordova.getActivity().getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
+            notificationManager.createNotificationChannel(channel);
         }
     }
 
@@ -73,6 +95,12 @@ public class AudioFocus extends CordovaPlugin {
         } else if (action.equals("dumpFocus")) {
             savedCallbackContext = callbackContext;
             dumpFocus();
+            return true;
+        } else if (action.equals("showCallNotification")) {
+            showNotification(args);
+            return true;
+        } else if (action.equals("dismissCallNotification")) {
+            dismissNotification();
             return true;
         }
 
@@ -136,6 +164,16 @@ public class AudioFocus extends CordovaPlugin {
     }
 
     @Override
+    public void onResume(boolean multitasking) {
+        isAppInForeground = true;
+    }
+
+    @Override
+    public void onPause(boolean multitasking) {
+        isAppInForeground = false;
+    }
+
+    @Override
     public void onDestroy() {
         dumpFocus();
         releaseMediaPlayer();
@@ -157,15 +195,16 @@ public class AudioFocus extends CordovaPlugin {
     }
 
     private void releaseMediaPlayer() {
-
         if (mMediaPlayer != null) {
             mMediaPlayer.release();
             mMediaPlayer = null;
         }
-
     }
 
     private void bringAppToFront() {
+        if (isAppInForeground) {
+            return;
+        }
         Intent intent = new Intent(cordova.getContext(), cordova.getActivity().getClass());
         intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -247,6 +286,36 @@ public class AudioFocus extends CordovaPlugin {
             savedCallbackContext.error(message);
         }
         savedCallbackContext = null;
+    }
+
+    private void showNotification(JSONArray args) {
+
+        String from = null;
+        try {
+            from = args.getString(0);
+        } catch (JSONException e) {
+            Log.i(TAG, "showNotification: no from name provided. Using default.");
+        }
+
+        if (from == null || from.equals("") || from.equals("null") || !from.equals("nil")) {
+            from = "Incoming call";
+        }
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(cordova.getContext(), NOTIFICATION_CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_launcher_foreground)
+                .setContentTitle(from)
+                .setContentText("Incoming voice call")
+                .setPriority(NotificationCompat.PRIORITY_MAX)
+                .setCategory(NotificationCompat.CATEGORY_CALL);
+
+        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(cordova.getContext());
+        notificationManager.notify(INCOMING_CALL_NOTIFICATION_ID, builder.build());
+
+    }
+
+    private void dismissNotification() {
+        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(cordova.getContext());
+        notificationManager.cancel(INCOMING_CALL_NOTIFICATION_ID);
     }
 
 }

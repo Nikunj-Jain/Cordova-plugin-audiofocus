@@ -11,10 +11,20 @@ exports.requestFocus = function(mode, success, error) {
     exec(success, error, "AudioFocus", "requestFocus", [mode]);
 };
 
-
 exports.dumpFocus = function(success, error) {
     success = success || function() { };
     error = error || function() { };
 
     exec(success, error, "AudioFocus", "dumpFocus");
+};
+
+exports.showCallNotification = function(fromStr, success, error) {
+    success = success || function() { };
+    error = error || function() { };
+
+    exec(success, error, "AudioFocus", "showCallNotification", [fromStr]);
+};
+
+exports.dismissCallNotification = function() {
+    exec(success, error, "AudioFocus", "dismissCallNotification");
 };
