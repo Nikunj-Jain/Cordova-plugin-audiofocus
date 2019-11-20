@@ -289,6 +289,7 @@ public class AudioFocus extends CordovaPlugin {
     private void showNotification(JSONArray args) {
 
         String from = null;
+        Log.i(TAG, "showNotification: " + args.toString());
         try {
             from = args.getString(0);
         } catch (JSONException e) {
