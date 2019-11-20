@@ -304,6 +304,7 @@ public class AudioFocus extends CordovaPlugin {
         NotificationCompat.Builder builder = new NotificationCompat.Builder(cordova.getContext(), NOTIFICATION_CHANNEL_ID)
                 .setSmallIcon(androidx.appcompat.R.drawable.notification_icon_background)
                 .setContentTitle(from)
+                .setSound(null)
                 .setContentText("Incoming voice call")
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .setCategory(NotificationCompat.CATEGORY_CALL);
