@@ -16,8 +16,6 @@ import android.util.Log;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
-import com.thenikunj.cordova.plugins.audiofocus.R;
-
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.PluginResult;
@@ -302,7 +300,7 @@ public class AudioFocus extends CordovaPlugin {
         }
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(cordova.getContext(), NOTIFICATION_CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_launcher_foreground)
+//                .setSmallIcon(R.drawable.ic_launcher_foreground)
                 .setContentTitle(from)
                 .setContentText("Incoming voice call")
                 .setPriority(NotificationCompat.PRIORITY_MAX)
