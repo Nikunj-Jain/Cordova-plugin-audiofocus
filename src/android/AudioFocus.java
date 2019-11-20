@@ -57,14 +57,13 @@ public class AudioFocus extends CordovaPlugin {
 
             mAudioFocusRequest = new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
                     .setAudioAttributes(mAudioAttributes)
-                    .setAcceptsDelayedFocusGain(true)
                     .setOnAudioFocusChangeListener(mFocusChangeListener)
                     .build();
 
 
             CharSequence name = "Incoming calls";
             String description = "Show incoming calls notification";
-            NotificationChannel channel = new NotificationChannel(NOTIFICATION_CHANNEL_ID, name, NotificationManager.IMPORTANCE_DEFAULT);
+            NotificationChannel channel = new NotificationChannel(NOTIFICATION_CHANNEL_ID, name, NotificationManager.IMPORTANCE_MAX);
             channel.setSound(null, null);
             channel.setDescription(description);
             NotificationManager notificationManager = (NotificationManager)cordova.getActivity().getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
@@ -297,7 +296,6 @@ public class AudioFocus extends CordovaPlugin {
         }
 
         if (from == null || from.equals("") || from.equals("null") || from.equals("nil")) {
-            Log.i(TAG, "showNotification: From " + from);
             from = "Incoming call";
         }
 
@@ -306,7 +304,7 @@ public class AudioFocus extends CordovaPlugin {
                 .setContentTitle(from)
                 .setSound(null)
                 .setContentText("Incoming voice call")
-                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setPriority(NotificationCompat.PRIORITY_MAX)
                 .setCategory(NotificationCompat.CATEGORY_CALL);
 
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(cordova.getContext());
