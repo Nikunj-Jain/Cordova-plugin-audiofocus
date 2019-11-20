@@ -10,5 +10,6 @@
             <uses-permission android:name="android.permission.INTERNET" />
             <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
         </config-file>
+        <framework src="androidx.appcompat:appcompat:1.1.0"/>
         <config-file parent="/*" target="AndroidManifest.xml"></config-file><source-file src="src/android/AudioFocus.java" target-dir="src/com/thenikunj/cordova/plugins/AudioFocus"/></platform>
 </plugin>
