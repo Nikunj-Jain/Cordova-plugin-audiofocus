@@ -2,7 +2,6 @@
 <plugin id="com.thenikunj.cordova.plugins.audiofocus" version="0.1.0" xmlns:android="http://schemas.android.com/apk/res/android" xmlns="http://apache.org/cordova/ns/plugins/1.0">
     <name>AudioFocus</name>
     <DESCRIPTION>Cordova plugin to request audio focus on Android</DESCRIPTION>
-    <asset src="assets" target="assets"/>
     <js-module name="AudioFocus" src="www/AudioFocus.js"><clobbers target="window.audioFocus"/></js-module>
     <platform name="android">
         <config-file parent="/*" target="res/xml/config.xml">
