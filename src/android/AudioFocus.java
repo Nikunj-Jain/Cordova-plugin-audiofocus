@@ -15,6 +15,7 @@ import android.media.MediaPlayer;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
+import android.os.PowerManager;
 import android.util.Log;
 import android.view.Window;
 import android.view.WindowManager;
@@ -41,6 +42,11 @@ public class AudioFocus extends CordovaPlugin {
     private static final String NOTIFICATION_CHANNEL_ID = TAG + ":NotificationChannel";
     private static final int INCOMING_CALL_NOTIFICATION_ID = 1001;
 
+    private final static String WAKE_LOCK_TAG = TAG + ":proximityWakeLockTag";
+
+    private PowerManager mPowerManager;
+    private PowerManager.WakeLock mWakeLock;
+
     private AudioManager mAudioManager;
     private onFocusChangeListener mFocusChangeListener;
     private CallbackContext savedCallbackContext;
@@ -63,12 +69,15 @@ public class AudioFocus extends CordovaPlugin {
 
     @Override
     public void onDestroy() {
+        deactivateProximitySensor();
         mAudioManager.setMode(AudioManager.MODE_NORMAL);
         dumpFocus();
     }
 
     @Override
     protected void pluginInitialize() {
+
+        mPowerManager = (PowerManager) cordova.getActivity().getApplicationContext().getSystemService(Context.POWER_SERVICE);
 
         mAudioManager = (AudioManager)cordova.getActivity().getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
         mFocusChangeListener = new onFocusChangeListener();
@@ -127,6 +136,7 @@ public class AudioFocus extends CordovaPlugin {
             return true;
         } else if (action.equals("dumpFocus")) {
             toggleScreenTurnOnAndShowWhenLocked(false);
+            deactivateProximitySensor();
             cordova.getThreadPool().execute(new Runnable() {
                 @Override
                 public void run() {
@@ -185,13 +195,13 @@ public class AudioFocus extends CordovaPlugin {
                     return;
                 }
 
+                activateProximitySensor();
                 mAudioManager.setSpeakerphoneOn(false);
                 mMediaPlayer.start();
 
                 if (!isScreenTurnOnEnabled) {
                     toggleScreenTurnOnAndShowWhenLocked(true);
                 }
-                bringAppToFront();
 
                 returnCallback(true, "Successfully started playing outgoing ring");
             }
@@ -466,6 +476,30 @@ public class AudioFocus extends CordovaPlugin {
     private void dismissNotification() {
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(cordova.getContext());
         notificationManager.cancel(INCOMING_CALL_NOTIFICATION_ID);
+    }
+
+    private void activateProximitySensor() {
+
+        if (mWakeLock == null) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                mWakeLock = mPowerManager.newWakeLock(PowerManager.PROXIMITY_SCREEN_OFF_WAKE_LOCK, WAKE_LOCK_TAG);
+            } else {
+                mWakeLock = mPowerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, WAKE_LOCK_TAG);
+            }
+        }
+        if (!mWakeLock.isHeld()) {
+            mWakeLock.acquire(3600000);
+        }
+    }
+
+    private void deactivateProximitySensor() {
+        if (mWakeLock != null && mWakeLock.isHeld()) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                mWakeLock.release(PowerManager.RELEASE_FLAG_WAIT_FOR_NO_PROXIMITY);
+            } else {
+                mWakeLock.release();
+            }
+        }
     }
 
 }
