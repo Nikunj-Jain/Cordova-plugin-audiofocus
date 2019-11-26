@@ -6,9 +6,11 @@
     <platform name="android">
         <config-file parent="/*" target="res/xml/config.xml">
             <feature name="AudioFocus"><param name="android-package" value="com.thenikunj.cordova.plugins.AudioFocus"/></feature>
+        </config-file>
+        <config-file parent="/*" target="AndroidManifest.xml">
+            <uses-permission android:name="android.permission.WAKE_LOCK"/>
             <uses-permission android:name="android.permission.RECORD_AUDIO"/>
             <uses-permission android:name="android.permission.INTERNET" />
             <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
-        </config-file>
-        <config-file parent="/*" target="AndroidManifest.xml"></config-file><source-file src="src/android/AudioFocus.java" target-dir="src/com/thenikunj/cordova/plugins/AudioFocus"/></platform>
+        </config-file><source-file src="src/android/AudioFocus.java" target-dir="src/com/thenikunj/cordova/plugins/AudioFocus"/></platform>
 </plugin>

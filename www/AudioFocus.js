@@ -25,20 +25,6 @@ exports.playOutgoingRing = function(success, error) {
     exec(success, error, "AudioFocus", "playOutgoingRing");
 };
 
-exports.dumpFocus = function(success, error) {
-    success = success || function() { };
-    error = error || function() { };
-
-    exec(success, error, "AudioFocus", "dumpFocus");
-};
-
-exports.showCallNotification = function(fromStr, success, error) {
-    success = success || function() { };
-    error = error || function() { };
-
-    exec(success, error, "AudioFocus", "showCallNotification", [fromStr]);
-};
-
-exports.dismissCallNotification = function() {
-    exec(null, null, "AudioFocus", "dismissCallNotification");
+exports.dumpFocus = function() {
+    exec(null, null, "AudioFocus", "dumpFocus");
 };

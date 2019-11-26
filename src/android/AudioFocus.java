@@ -2,6 +2,7 @@ package com.thenikunj.cordova.plugins;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
@@ -62,8 +63,8 @@ public class AudioFocus extends CordovaPlugin {
 
     @Override
     public void onDestroy() {
+        mAudioManager.setMode(AudioManager.MODE_NORMAL);
         dumpFocus();
-
     }
 
     @Override
@@ -75,9 +76,12 @@ public class AudioFocus extends CordovaPlugin {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             CharSequence name = "Incoming calls";
             String description = "Show incoming calls notification";
-            NotificationChannel channel = new NotificationChannel(NOTIFICATION_CHANNEL_ID, name, NotificationManager.IMPORTANCE_MAX);
+            NotificationChannel channel = new NotificationChannel(NOTIFICATION_CHANNEL_ID, name, NotificationManager.IMPORTANCE_DEFAULT);
+            channel.enableVibration(false);
+            channel.enableLights(true);
             channel.setSound(null, null);
             channel.setDescription(description);
+            channel.setShowBadge(false);
             NotificationManager notificationManager = (NotificationManager)cordova.getActivity().getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
             notificationManager.createNotificationChannel(channel);
         }
@@ -96,25 +100,39 @@ public class AudioFocus extends CordovaPlugin {
 
         if (action.equals("setModeInCommunication")) {
             savedCallbackContext = callbackContext;
-            setModeInCommunication();
+            cordova.getThreadPool().execute(new Runnable() {
+                @Override
+                public void run() {
+                    setModeInCommunication();
+                }
+            });
             return true;
         } else if (action.equals("playOutgoingRing")) {
             savedCallbackContext = callbackContext;
-            playOutgoingRing();
+            cordova.getThreadPool().execute(new Runnable() {
+                @Override
+                public void run() {
+                    playOutgoingRing();
+                }
+            });
             return true;
         } else if (action.equals("playIncomingRing")) {
             savedCallbackContext = callbackContext;
-            playIncomingRing();
+            cordova.getThreadPool().execute(new Runnable() {
+                @Override
+                public void run() {
+                    playIncomingRing();
+                }
+            });
             return true;
         } else if (action.equals("dumpFocus")) {
-            savedCallbackContext = callbackContext;
-            dumpFocus();
-            return true;
-        } else if (action.equals("showCallNotification")) {
-            showNotification(args);
-            return true;
-        } else if (action.equals("dismissCallNotification")) {
-            dismissNotification();
+            toggleScreenTurnOnAndShowWhenLocked(false);
+            cordova.getThreadPool().execute(new Runnable() {
+                @Override
+                public void run() {
+                    dumpFocus();
+                }
+            });
             return true;
         }
 
@@ -134,6 +152,7 @@ public class AudioFocus extends CordovaPlugin {
         try {
             mMediaPlayer.prepare();
         } catch (Exception e) {
+
             Log.e(TAG, "playOutgoingRing: ", e.getCause());
             returnCallback(false, "Unable to start playing media. Exception occurred: " + e.getLocalizedMessage());
             return;
@@ -142,6 +161,7 @@ public class AudioFocus extends CordovaPlugin {
         cordova.getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
+
                 if (mMediaPlayer == null) {
                     Log.e(TAG, "run playOutgoingRing: mMediaPlayer is null");
                     returnCallback(false, "Unable to play media");
@@ -149,22 +169,23 @@ public class AudioFocus extends CordovaPlugin {
                 }
 
                 int result;
-                AudioFocusRequest audioFocusRequest = createAudioRequest(AUDIO_REQUEST_TYPE_COMMUNICATION);
-
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    AudioFocusRequest audioFocusRequest = createAudioRequest(AUDIO_REQUEST_TYPE_COMMUNICATION);
                     result = mAudioManager.requestAudioFocus(audioFocusRequest);
+                    if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+                        mActiveAudioFocusRequest = audioFocusRequest;
+                    }
                 } else {
                     result = mAudioManager.requestAudioFocus(mFocusChangeListener, AudioManager.STREAM_VOICE_CALL, AudioManager.AUDIOFOCUS_GAIN);
                 }
 
                 if (result != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-                    mActiveAudioFocusRequest = audioFocusRequest;
                     Log.e(TAG, "run playOutgoingRing: Failed to get audio focus");
                     returnCallback(false, "Failed to get audio focus");
                     return;
                 }
 
-                mAudioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
+                mAudioManager.setSpeakerphoneOn(false);
                 mMediaPlayer.start();
 
                 if (!isScreenTurnOnEnabled) {
@@ -175,9 +196,6 @@ public class AudioFocus extends CordovaPlugin {
                 returnCallback(true, "Successfully started playing outgoing ring");
             }
         });
-
-
-        returnCallback(true, "Playing Outgoing ring successful");
     }
 
     private void playIncomingRing() {
@@ -201,6 +219,7 @@ public class AudioFocus extends CordovaPlugin {
         cordova.getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
+
                 if (mMediaPlayer == null) {
                     Log.e(TAG, "run playIncomingRing: mMediaPlayer is null");
                     returnCallback(false, "Unable to play media");
@@ -210,7 +229,11 @@ public class AudioFocus extends CordovaPlugin {
                 int result;
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    result = mAudioManager.requestAudioFocus(createAudioRequest(AUDIO_REQUEST_TYPE_RING));
+                    AudioFocusRequest audioFocusRequest = createAudioRequest(AUDIO_REQUEST_TYPE_RING);
+                    result = mAudioManager.requestAudioFocus(audioFocusRequest);
+                    if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+                        mActiveAudioFocusRequest = audioFocusRequest;
+                    }
                 } else {
                     result = mAudioManager.requestAudioFocus(mFocusChangeListener, AudioManager.STREAM_RING, AudioManager.AUDIOFOCUS_GAIN);
                 }
@@ -221,7 +244,7 @@ public class AudioFocus extends CordovaPlugin {
                     return;
                 }
 
-                mAudioManager.setMode(AudioManager.MODE_RINGTONE);
+                mAudioManager.setSpeakerphoneOn(true);
                 mMediaPlayer.start();
 
                 if (!isScreenTurnOnEnabled) {
@@ -245,7 +268,11 @@ public class AudioFocus extends CordovaPlugin {
                 int result;
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    result = mAudioManager.requestAudioFocus(createAudioRequest(AUDIO_REQUEST_TYPE_COMMUNICATION));
+                    AudioFocusRequest audioFocusRequest = createAudioRequest(AUDIO_REQUEST_TYPE_COMMUNICATION);
+                    result = mAudioManager.requestAudioFocus(audioFocusRequest);
+                    if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+                        mActiveAudioFocusRequest = audioFocusRequest;
+                    }
                 } else {
                     result = mAudioManager.requestAudioFocus(mFocusChangeListener, AudioManager.STREAM_VOICE_CALL, AudioManager.AUDIOFOCUS_GAIN);
                 }
@@ -256,6 +283,7 @@ public class AudioFocus extends CordovaPlugin {
                 }
 
                 mAudioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
+                mAudioManager.setSpeakerphoneOn(false);
                 returnCallback(true, "Successfully set mode");
             }
         });
@@ -284,25 +312,22 @@ public class AudioFocus extends CordovaPlugin {
 
         boolean success = false;
 
-        if (mMediaPlayer == null) {
-            mMediaPlayer = new MediaPlayer();
-        }
+        releaseMediaPlayer();
 
-        if (mMediaPlayer.isPlaying()) {
-            mMediaPlayer.stop();
-            mMediaPlayer.reset();
-        }
+        mMediaPlayer = new MediaPlayer();
 
-        if (mode == MEDIA_PLAYER_MODE_INCOMING_RING) {
+        if (mode == MEDIA_PLAYER_MODE_OUTGOING_RING) {
             try {
                 AssetFileDescriptor afd = cordova.getActivity().getAssets().openFd("www/assets/sounds/ringback.ogg");
+                mMediaPlayer.setAudioStreamType(AudioManager.STREAM_VOICE_CALL);
                 mMediaPlayer.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
+                mMediaPlayer.setLooping(true);
                 success = true;
             } catch (Exception e) {
                 Log.e(TAG, "setUpMediaPlayer: ", e.getCause());
             }
 
-        } else if (mode == MEDIA_PLAYER_MODE_OUTGOING_RING) {
+        } else if (mode == MEDIA_PLAYER_MODE_INCOMING_RING) {
             Uri alert = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
             try {
                 mMediaPlayer.setDataSource(cordova.getContext(), alert);
@@ -323,34 +348,25 @@ public class AudioFocus extends CordovaPlugin {
     private void dumpFocus() {
 
         releaseMediaPlayer();
-        if (isScreenTurnOnEnabled) {
-            toggleScreenTurnOnAndShowWhenLocked(false);
-        }
-
-        int result = AudioManager.AUDIOFOCUS_REQUEST_FAILED;
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             if (mActiveAudioFocusRequest != null) {
-                result = mAudioManager.abandonAudioFocusRequest(mActiveAudioFocusRequest);
+                mAudioManager.abandonAudioFocusRequest(mActiveAudioFocusRequest);
             }
         } else {
-            result = mAudioManager.abandonAudioFocus(mFocusChangeListener);
-        }
-
-        if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-            String str = "Abandoned audio focus successfully.";
-            mActiveAudioFocusRequest = null;
-            returnCallback(true, str);
-        } else {
-            String str = "Abandoning audio focus failed.";
-            returnCallback(false, str);
+            mAudioManager.abandonAudioFocus(mFocusChangeListener);
         }
 
     }
 
     private void releaseMediaPlayer() {
         if (mMediaPlayer != null) {
-            mMediaPlayer.stop();
+
+            if (mMediaPlayer.isPlaying()) {
+                mMediaPlayer.stop();
+            }
+
+            mMediaPlayer.reset();
             mMediaPlayer.release();
             mMediaPlayer = null;
         }
@@ -375,11 +391,13 @@ public class AudioFocus extends CordovaPlugin {
             mAudioAttributes = new AudioAttributes.Builder()
                     .setUsage(AudioAttributes.USAGE_VOICE_COMMUNICATION)
                     .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                    .setUsage(AudioAttributes.USAGE_VOICE_COMMUNICATION)
                     .build();
         } else {
             mAudioAttributes = new AudioAttributes.Builder()
                     .setUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE)
                     .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                    .setUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE)
                     .build();
         }
 
@@ -434,9 +452,11 @@ public class AudioFocus extends CordovaPlugin {
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(cordova.getContext(), NOTIFICATION_CHANNEL_ID)
                 .setSmallIcon(androidx.appcompat.R.drawable.notification_icon_background)
+                .setDefaults(Notification.DEFAULT_LIGHTS)
                 .setContentTitle(from)
-                .setContentText("Incoming voice call")
-                .setPriority(NotificationCompat.PRIORITY_DEFAULT);
+                .setContentText("Incoming voice call");
+
+        Intent acceptCallIntent = new Intent(cordova.getContext(), cordova.getActivity().getClass());
 
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(cordova.getContext());
         notificationManager.notify(INCOMING_CALL_NOTIFICATION_ID, builder.build());
